@@ -470,6 +470,8 @@ import com.android.server.vr.VrManagerInternal;
 import com.android.server.wm.PinnedStackWindowController;
 import com.android.server.wm.WindowManagerService;
 
+import com.samsung.android.dualscreen.DualScreenManager;
+
 import dalvik.system.VMRuntime;
 
 import libcore.io.IoUtils;
@@ -704,6 +706,18 @@ public class ActivityManagerService extends IActivityManager.Stub
 
     private final ClientLifecycleManager mLifecycleManager;
 
+    DualScreenPolicy mDualScreenPolicy = null;
+
+    boolean mIsBackWindowShown = false;
+
+    private volatile boolean mScreenOn = true;
+
+    int[] mScreenState = new int[4];
+
+    int mBackWindowDisplayId = 0;
+
+    static final boolean DEBUG_DUALSCREEN = DualScreenManager.DEBUG_AM;
+
     final TaskChangeNotificationController mTaskChangeNotificationController;
 
     final InstrumentationReporter mInstrumentationReporter = new InstrumentationReporter();
@@ -711,6 +725,9 @@ public class ActivityManagerService extends IActivityManager.Stub
     final ArrayList<ActiveInstrumentation> mActiveInstrumentation = new ArrayList<>();
 
     public final IntentFirewall mIntentFirewall;
+
+    int mTargetUserId = -10000;
+    int mCurrentUserId = 0;
 
     // Whether we should show our dialogs (ANR, crash, etc) or just perform their
     // default action automatically.  Important for devices without direct input
@@ -1868,6 +1885,33 @@ public class ActivityManagerService extends IActivityManager.Stub
 
     WindowManagerService mWindowManager;
     final ActivityThread mSystemThread;
+
+    /* renamed from: com.android.server.am.ActivityManagerService$1TransferPipeThread */
+    class AnonymousClass1TransferPipeThread extends Thread {
+        final String[] args;
+        ParcelFileDescriptor pFd = null;
+        final IApplicationThread thread;
+
+        public AnonymousClass1TransferPipeThread(IApplicationThread _thread, FileDescriptor _fd, String[] _args) {
+            super("TransferPipeWrite");
+            this.thread = _thread;
+            this.args = _args;
+            try {
+                this.pFd = ParcelFileDescriptor.dup(_fd);
+            } catch (IOException e) {
+            }
+        }
+
+        public void run() {
+            try {
+                if (this.pFd != null) {
+                    this.thread.dumpDbInfo(this.pFd.getFileDescriptor(), this.args);
+                    this.pFd.close();
+                }
+            } catch (RemoteException | IOException e) {
+            }
+        }
+    }
 
     private final class AppDeathRecipient implements IBinder.DeathRecipient {
         final ProcessRecord mApp;
@@ -13487,6 +13531,23 @@ public class ActivityManagerService extends IActivityManager.Stub
             mStackSupervisor.goingToSleepLocked();
             updateResumedAppTrace(null /* resumed */);
             updateOomAdjLocked();
+        }
+    }
+
+    public boolean isScreenOn(int displayId) {
+        if ((!this.mIsBackWindowShown || displayId != this.mBackWindowDisplayId) && this.mScreenState[displayId] == 2) {
+            return true;
+        }
+        return false;
+    }
+
+    public void setBackWindowShown(boolean show) {
+    }
+
+    void setBackWindowShownLocked(boolean show, int displayId) {
+        if (this.mIsBackWindowShown != show) {
+            this.mIsBackWindowShown = show;
+            this.mBackWindowDisplayId = displayId;
         }
     }
 
@@ -26471,6 +26532,16 @@ public class ActivityManagerService extends IActivityManager.Stub
             }
             return true;
         }
+    }
+
+    public void onScreenStateChanged(int displayId, int state) {
+    }
+
+    public void onMultipleScreenStateChanged(int state, int reason) {
+    }
+
+    int getCurrentUserIdLocked() {
+        return this.mTargetUserId != -10000 ? this.mTargetUserId : this.mCurrentUserId;
     }
 
     public boolean stopBinderTrackingAndDump(ParcelFileDescriptor fd) throws RemoteException {

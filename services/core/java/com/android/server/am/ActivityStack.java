@@ -339,9 +339,11 @@ class ActivityStack<T extends StackWindowController> extends ConfigurationContai
     private final Rect mDeferredTaskBounds = new Rect();
     private final Rect mDeferredTaskInsetBounds = new Rect();
 
+    // Samsung 
     int mCurrentUser;
-
     final int mStackId;
+    ActivityDisplay mActivityDisplay;
+
     /** The attached Display's unique identifier, or -1 if detached */
     int mDisplayId;
 
@@ -476,6 +478,10 @@ class ActivityStack<T extends StackWindowController> extends ConfigurationContai
 
     T getWindowContainerController() {
         return mWindowContainerController;
+    }
+
+    boolean okToShowLocked(ActivityRecord r) {
+        return this.mStackSupervisor.isCurrentProfileLocked(r.userId) || (r.info.flags & 1024) != 0;
     }
 
     /**
@@ -5315,6 +5321,10 @@ class ActivityStack<T extends StackWindowController> extends ConfigurationContai
         return mStackId;
     }
 
+    int getDisplayId() {
+        return mActivityDisplay.getDisplayId();
+    }
+
     @Override
     public String toString() {
         return "ActivityStack{" + Integer.toHexString(System.identityHashCode(this))
@@ -5374,5 +5384,14 @@ class ActivityStack<T extends StackWindowController> extends ConfigurationContai
         // TODO: Remove, no longer needed with windowingMode.
         proto.write(FULLSCREEN, matchParentBounds());
         proto.end(token);
+    }
+
+    void sendShrinkRequestIfNeeded(ActivityRecord launchedActivity) {
+    }
+
+    void sendShrinkRequestToActivityLocked(ActivityRecord r, int toDisplayId, int reason) {
+    }
+
+    void sendExpandRequestToActivityLocked(ActivityRecord r, int reason) {
     }
 }

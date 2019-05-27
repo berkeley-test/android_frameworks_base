@@ -104,6 +104,7 @@ import android.provider.Settings;
 import android.service.voice.IVoiceInteractionSession;
 import android.util.DisplayMetrics;
 import android.util.Slog;
+import android.util.SparseArray;
 import android.util.proto.ProtoOutputStream;
 
 import com.android.internal.annotations.VisibleForTesting;
@@ -295,7 +296,16 @@ class TaskRecord extends ConfigurationContainer implements TaskWindowContainerLi
     String mCallingPackage;
 
     final ActivityManagerService mService;
-
+    DualScreenAttrs dualScreenAttrs;
+    TaskRecord mExpandedHomeTask = null;
+    ActivityStack stack;
+    int taskType;
+    boolean fixed = false;
+    boolean canMoveTaskToScreen = true;
+ 
+    private TaskRecord mChildCoupledTask = null;
+    private TaskRecord mParentCoupledTask = null;
+    private boolean mFinishWithCoupledTask = false;
     private final Rect mTmpStableBounds = new Rect();
     private final Rect mTmpNonDecorBounds = new Rect();
     private final Rect mTmpRect = new Rect();
@@ -423,6 +433,36 @@ class TaskRecord extends ConfigurationContainer implements TaskWindowContainerLi
 
     TaskWindowContainerController getWindowContainerController() {
         return mWindowContainerController;
+    }
+
+    public TaskRecord getParentCoupledTask() {
+        return this.mParentCoupledTask;
+    }
+
+    public TaskRecord getChildCoupledTask() {
+        return this.mChildCoupledTask;
+    }
+
+    public TaskRecord getCoupledTask() {
+        if (this.mParentCoupledTask != null) {
+            return this.mParentCoupledTask;
+        }
+        if (this.mChildCoupledTask != null) {
+            return this.mChildCoupledTask;
+        }
+        return null;
+    }
+
+    public boolean isFinishWithCoupledTask() {
+        return this.mFinishWithCoupledTask;
+    }
+
+    public void setFinishWithCoupledTask(boolean finishWithCoupledTask) {
+        this.mFinishWithCoupledTask = finishWithCoupledTask;
+        ActivityRecord r = getTopActivity();
+        if (r != null) {
+            this.mService.mWindowManager.setFinishWithCoupledTask(r.appToken, finishWithCoupledTask);
+        }
     }
 
     void createWindowContainer(boolean onTop, boolean showForAllUsers) {
@@ -2091,6 +2131,30 @@ class TaskRecord extends ConfigurationContainer implements TaskWindowContainerLi
         proto.write(MIN_WIDTH, mMinWidth);
         proto.write(MIN_HEIGHT, mMinHeight);
         proto.end(token);
+    }
+
+    int getType() {
+        return this.taskType;
+    }
+
+    boolean isRecentTask() {
+        return this.taskType == 2;
+    }
+
+    boolean isExpandHomeTask() {
+        return false;
+    }
+
+    int getScreenZone() {
+        int obscuredScreenZone = 0;
+        ArrayList<ActivityRecord> activities = this.mActivities;
+        for (int activityNdx = activities.size() - 1; activityNdx >= 0; activityNdx--) {
+            ActivityRecord r = (ActivityRecord) activities.get(activityNdx);
+            if (!r.finishing) {
+                obscuredScreenZone |= ActivityStackSupervisor.convertDisplayIdToScreenZone(r.getDisplayId());
+            }
+        }
+        return obscuredScreenZone;
     }
 
     /**

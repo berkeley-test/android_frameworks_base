@@ -189,6 +189,8 @@ import com.android.server.wm.AppWindowContainerListener;
 import com.android.server.wm.ConfigurationContainer;
 import com.android.server.wm.TaskWindowContainerController;
 
+import com.samsung.android.dualscreen.DualScreen;
+
 import lineageos.providers.LineageSettings;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -204,7 +206,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-
 /**
  * An entry in the history stack, representing an activity.
  */
@@ -262,7 +263,7 @@ final class ActivityRecord extends ConfigurationContainer implements AppWindowCo
     private int theme;              // resource identifier of activity's theme.
     private int realTheme;          // actual theme resource we will use, never 0.
     private int windowFlags;        // custom window flags for preview window.
-    private TaskRecord task;        // the task this is in.
+    TaskRecord task;        // the task this is in.
     private long createTime = System.currentTimeMillis();
     long lastVisibleTime;   // last time this activity became visible
     long cpuTimeAtResume;   // the cpu time of host process at the time of resuming activity
@@ -360,6 +361,9 @@ final class ActivityRecord extends ConfigurationContainer implements AppWindowCo
 
     private boolean mShowWhenLocked;
     private boolean mTurnScreenOn;
+    ComponentName sourceActivity;
+    DualScreenAttrs dualScreenAttrs;
+    int mActivityType;
 
     /**
      * Temp configs used in {@link #ensureActivityConfiguration(int, boolean)}
@@ -849,6 +853,7 @@ final class ActivityRecord extends ConfigurationContainer implements AppWindowCo
             ActivityStackSupervisor supervisor, ActivityOptions options,
             ActivityRecord sourceRecord) {
         service = _service;
+        sourceActivity = _intent.getComponent;
         appToken = new Token(this, _intent);
         info = aInfo;
         launchedFromPid = _launchedFromPid;
@@ -1178,6 +1183,36 @@ final class ActivityRecord extends ConfigurationContainer implements AppWindowCo
             }
             clearOptionsLocked();
         }
+    }
+
+    boolean isExpandHomeActivity() {
+        return false;
+    }
+
+    boolean isSamsungHomeActivity() {
+        return false;
+    }
+
+    boolean isHomeActivity() {
+        return this.mActivityType == 1;
+    }
+
+    boolean isRecentsActivity() {
+        return this.mActivityType == 2;
+    }
+
+    boolean isApplicationActivity() {
+        boolean result;
+        int i = 1;
+        if (this.mActivityType == 0) {
+            result = true;
+        } else {
+            result = false;
+        }
+        if (this.mActivityType != 3) {
+            i = 0;
+        }
+        return result;
     }
 
     boolean isInHistory() {
@@ -2202,6 +2237,13 @@ final class ActivityRecord extends ConfigurationContainer implements AppWindowCo
             return r.getStack();
         }
         return null;
+    }
+
+    DualScreen getScreen() {
+        return DualScreen.MAIN;
+    }
+
+    void setScreen(DualScreen screen) {
     }
 
     /**

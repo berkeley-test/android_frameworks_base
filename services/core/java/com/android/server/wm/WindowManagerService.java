@@ -190,6 +190,7 @@ import android.view.Display;
 import android.view.DisplayCutout;
 import android.view.DisplayInfo;
 import android.view.Gravity;
+import android.view.IApplicationToken;
 import android.view.IAppTransitionAnimationSpecsFuture;
 import android.view.IDockedStackListener;
 import android.view.IInputFilter;
@@ -248,6 +249,10 @@ import com.android.server.policy.WindowManagerPolicy;
 import com.android.server.policy.WindowManagerPolicy.ScreenOffListener;
 import com.android.server.power.ShutdownThread;
 import com.android.server.utils.PriorityDump;
+
+import com.android.server.am.DualScreenPolicy;
+import com.samsung.android.dualscreen.DualScreen;
+import com.samsung.android.dualscreen.DualScreenManager;
 
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
@@ -5517,6 +5522,25 @@ public class WindowManagerService extends IWindowManager.Stub
         return mWindowTracing.isEnabled();
     }
 
+    public void moveInputMethodWindowsToDisplayIfNeededLocked(boolean show) {
+    }
+
+    public void setAppTokenDisplayId(IApplicationToken token, int displayId) {
+    }
+
+    public void setParentCoupledTask(IApplicationToken token, IApplicationToken parentToken) {
+    }
+
+    public void setChildCoupledTask(IApplicationToken token, IApplicationToken childToken) {
+    }
+
+    public void setFinishWithCoupledTask(IApplicationToken token, boolean finishWithCoupledTask) {
+    }
+
+    public void setAppBackWindow(int displayId) {
+        this.mH.sendMessageAtFrontOfQueue(this.mH.obtainMessage(202, displayId, 0));
+    }
+
     // -------------------------------------------------------------
     // Internals
     // -------------------------------------------------------------
@@ -7602,6 +7626,12 @@ public class WindowManagerService extends IWindowManager.Stub
 
     void finishSeamlessRotation() {
         mRotatingSeamlessly = false;
+    }
+
+    public void cancelDualScreenTransitionIfNeeded(DualScreen screen) {
+    }
+
+    public void cancelDualScreenTransition() {
     }
 
     /**

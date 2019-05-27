@@ -808,6 +808,18 @@ public class KeyEvent extends InputEvent implements Parcelable {
     public static final int KEYCODE_ALL_APPS = 284;
     /** Key code constant: Refresh key. */
     public static final int KEYCODE_REFRESH = 285;
+    
+    public static final int KEYCODE_SIDE_TOUCH_0 = 1051;
+    public static final int KEYCODE_SIDE_TOUCH_1 = 1052;
+    public static final int KEYCODE_SIDE_TOUCH_2 = 1053;
+    public static final int KEYCODE_SIDE_TOUCH_3 = 1054;
+    public static final int KEYCODE_SIDE_TOUCH_4 = 1055;
+    public static final int KEYCODE_SIDE_TOUCH_5 = 1056;
+    public static final int KEYCODE_SIDE_TOUCH_6 = 1057;
+    public static final int KEYCODE_SIDE_TOUCH_7 = 1058;
+    public static final int KEYCODE_2ND_SCREEN_WAKEUP = 1069;
+    public static final int KEYCODE_SIDE_GESTURE_RIGHT = 1070;
+    public static final int KEYCODE_SIDE_GESTURE_LEFT = 1071;
 
     private static final int LAST_KEYCODE = KEYCODE_REFRESH;
 

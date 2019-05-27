@@ -16,6 +16,8 @@
 
 package android.util;
 
+import android.util.secutil.LogSwitcher;
+
 /**
  * @hide
  */
@@ -119,5 +121,11 @@ public final class Slog {
     public static int println(int priority, String tag, String msg) {
         return Log.println_native(Log.LOG_ID_SYSTEM, priority, tag, msg);
     }
-}
 
+    public static int secPrintln(int priority, String tag, String msg) {
+        if (LogSwitcher.isShowingGlobalLog) {
+            return println(priority, tag, msg);
+        }
+        return 0;
+    }
+}

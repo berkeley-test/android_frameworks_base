@@ -965,7 +965,7 @@ public class FingerprintManager implements BiometricFingerprintConstants {
         if (mAuthenticationCallback != null) {
             mAuthenticationCallback.onAuthenticationAcquired(acquireInfo);
         }
-        final String msg = getAcquiredString(acquireInfo, vendorCode);
+        String msg = getAcquiredString(acquireInfo, vendorCode);
         if (msg == null) {
             return;
         }

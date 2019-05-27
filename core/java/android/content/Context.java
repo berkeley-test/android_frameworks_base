@@ -3647,6 +3647,10 @@ public abstract class Context {
      */
     public static final String FINGERPRINT_SERVICE = "fingerprint";
 
+    public static final String DUALSCREEN_SERVICE = "dualscreen";
+
+    public static final String EDGE_SERVICE = "edgeservice";
+
     /**
      * Use with {@link #getSystemService(String)} to retrieve a
      * {@link android.media.MediaRouter} for controlling and managing
@@ -4878,6 +4882,26 @@ public abstract class Context {
      * @hide
      */
     public abstract Display getDisplay();
+
+    /**
+     * @hide
+     */
+    public int getDisplayId() {
+        return 0;
+    }
+
+    /**
+     * @hide
+     */
+    public void setDisplay(Display display) {
+    }
+
+    /**
+     * @hide
+     */
+    public boolean getShrinkRequested() {
+        return false;
+    }
 
     /**
      * @hide

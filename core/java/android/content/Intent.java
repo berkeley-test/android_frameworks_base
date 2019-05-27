@@ -59,6 +59,9 @@ import android.util.proto.ProtoOutputStream;
 
 import com.android.internal.util.XmlUtils;
 
+import com.samsung.android.dualscreen.DualScreen;
+import com.samsung.android.dualscreen.DualScreenLaunchParams;
+
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
@@ -635,6 +638,12 @@ public class Intent implements Parcelable, Cloneable {
     private static final String ATTR_COMPONENT = "component";
     private static final String ATTR_DATA = "data";
     private static final String ATTR_FLAGS = "flags";
+    public static final String ACTION_DUALSCREEN_TEST_SCREENOFF = "android.intent.action.DUALSCREEN_TEST_SCREENOFF";
+    public static final String ACTION_DUALSCREEN_TEST_SCREENON = "android.intent.action.DUALSCREEN_TEST_SCREENON";
+    public static final String METADATA_DUALSCREEN_FULLVIEW_ENABLE = "com.samsung.android.sdk.dualscreen.fullview.enable";
+    public static final String METADATA_DUALSCREEN_FULLVIEW_LAUNCH_WITH_PRIORITY = "com.samsung.android.sdk.dualscreen.fullview.launchWithPriority";
+    public static final String METADATA_DUALSCREEN_FULLVIEW_SCREEN_ORIENTATION = "com.samsung.android.sdk.dualscreen.fullview.screenOrientation";
+    public static final String METADATA_DUALSCREEN_REQ_SINGLE_TASK_FOR_DISPLAY = "com.samsung.android.dualscreen.REQ_SINGLE_TASK_FOR_DISPLAY";
 
     // ---------------------------------------------------------------------
     // ---------------------------------------------------------------------
@@ -5935,6 +5944,7 @@ public class Intent implements Parcelable, Cloneable {
     private Uri mData;
     private String mType;
     private String mPackage;
+    private DualScreenLaunchParams mLaunchParams = new DualScreenLaunchParams(DualScreen.UNKNOWN);
     private ComponentName mComponent;
     private int mFlags;
     private ArraySet<String> mCategories;
@@ -5965,6 +5975,17 @@ public class Intent implements Parcelable, Cloneable {
      * Create an empty intent.
      */
     public Intent() {
+    }
+
+    public DualScreenLaunchParams getLaunchParams() {
+        return this.mLaunchParams;
+    }
+
+    public void setLaunchParams(DualScreenLaunchParams launchParam) {
+        if (launchParam == null) {
+            throw new NullPointerException("launchParam is null");
+        }
+        this.mLaunchParams = launchParam;
     }
 
     /**

@@ -2206,6 +2206,12 @@ public abstract class PackageManager {
     @SdkConstant(SdkConstantType.FEATURE)
     public static final String FEATURE_TOUCHSCREEN_MULTITOUCH_JAZZHAND = "android.hardware.touchscreen.multitouch.jazzhand";
 
+    @SdkConstant(SdkConstantType.FEATURE)
+    public static final String FEATURE_DUALSCREEN = "com.samsung.feature.dualscreen";
+
+    @SdkConstant(SdkConstantType.FEATURE)
+    public static final String FEATURE_DUAL_LCD = "com.sec.feature.dual_lcd";
+
     /**
      * Feature for {@link #getSystemAvailableFeatures} and
      * {@link #hasSystemFeature}: The device does not have a touch screen, but

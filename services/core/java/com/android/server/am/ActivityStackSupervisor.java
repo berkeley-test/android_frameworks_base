@@ -180,6 +180,8 @@ import com.android.server.wm.ConfigurationContainer;
 import com.android.server.wm.PinnedStackWindowController;
 import com.android.server.wm.WindowManagerService;
 
+import com.samsung.android.dualscreen.DualScreen;
+
 import java.io.FileDescriptor;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -311,6 +313,9 @@ public class ActivityStackSupervisor extends ConfigurationContainer implements D
     /** The historial list of recent tasks including inactive tasks */
     RecentTasks mRecentTasks;
 
+    private ActivityStack mExpandedHomeStack;
+    TaskRecord mExpandedHomeTask = null;
+    
     /** Helper class to abstract out logic for fetching the set of currently running tasks */
     private RunningTasks mRunningTasks;
 
@@ -320,6 +325,12 @@ public class ActivityStackSupervisor extends ConfigurationContainer implements D
     /** Short cut */
     WindowManagerService mWindowManager;
     DisplayManager mDisplayManager;
+    final ActivityStack mStack;
+    ActivityDisplay mActivityDisplay;
+    TaskRecord mFixedTask;
+    final int mStackId;
+    ArrayList<ActivityStack> mStacks;
+    ArrayList<TaskRecord> mUniversalTaskHistory = new ArrayList();
 
     private LaunchParamsController mLaunchParamsController;
 
@@ -343,7 +354,7 @@ public class ActivityStackSupervisor extends ConfigurationContainer implements D
      * been resumed. If stacks are changing position this will hold the old stack until the new
      * stack becomes resumed after which it will be set to mFocusedStack. */
     private ActivityStack mLastFocusedStack;
-
+    private ActivityStack[] mLastFocusedStacks = new ActivityStack[4];
     /** List of activities that are waiting for a new activity to become visible before completing
      * whatever operation they are supposed to do. */
     // TODO: Remove mActivitiesWaitingForVisibleActivity list and just remove activity from
@@ -718,7 +729,7 @@ public class ActivityStackSupervisor extends ConfigurationContainer implements D
                     mLastFocusedStack == null ? -1 : mLastFocusedStack.getStackId(), reason);
         }
 
-        final ActivityRecord r = topRunningActivityLocked();
+        ActivityRecord r = topRunningActivityLocked();
         if (mService.mBooting || !mService.mBooted) {
             if (r != null && r.idle) {
                 checkFinishBootingLocked();
@@ -1982,6 +1993,24 @@ public class ActivityStackSupervisor extends ConfigurationContainer implements D
         }
     }
 
+    boolean isValidCoupled(ActivityRecord ar, ActivityRecord parent) {
+        if (ar == null || parent == null) {
+            Slog.d("ActivityManager", "isValidCoupled() failed! / Reason = ActivityRecord is null / ar = " + ar + " / parent = " + parent);
+            return false;
+        } else if (ar.intent == null || (ar.intent.getFlags() & 268435456) == 0) {
+            DualScreen sourceScreen = parent.dualScreenAttrs.getScreen();
+            DualScreen targetScreen = ar.dualScreenAttrs.getScreen();
+            if (sourceScreen != targetScreen) {
+                return true;
+            }
+            Slog.d("ActivityManager", "isValidCoupled() failed! / Reason = Screen Error! sourceScreen == targetScreen! / ar = " + ar + "targetScreen = " + targetScreen + " / parent = " + parent + "sourceScreen = " + sourceScreen);
+            return false;
+        } else {
+            Slog.d("ActivityManager", "isValidCoupled() failed! / Reason = It has FLAG_ACTIVITY_NEW_TASK / ar = " + ar + " / parent = " + parent);
+            return false;
+        }
+    }
+
     /**
      * Called when the frontmost task is idle.
      * @return the state of mService.mBooting before this was called.
@@ -2292,7 +2321,7 @@ public class ActivityStackSupervisor extends ConfigurationContainer implements D
             mUserLeaving = true;
         }
 
-        final ActivityRecord prev = topRunningActivityLocked();
+        ActivityRecord prev = topRunningActivityLocked();
 
         if ((flags & ActivityManager.MOVE_TASK_WITH_HOME) != 0
                 || (prev != null && prev.isActivityTypeRecents())) {
@@ -4941,6 +4970,87 @@ public class ActivityStackSupervisor extends ConfigurationContainer implements D
             pw.println(prefix + "  mResult=");
             mResult.dump(pw, prefix);
         }
+    }
+
+    void sendExpandRequestToExpandableActivityLocked(int reason) {
+    }
+
+    void sendShrinkRequestToAllResumedActivityLocked(int toDisplayId, int reason) {
+    }
+
+    int getScreenZone(ActivityStack stack) {
+        return convertDisplayIdToScreenZone(stack.getDisplayId());
+    }
+
+    boolean isInFixedScreenMode() {
+        return mFixedTask != null;
+    }
+
+    ActivityStack getHomeStack() {
+        return mHomeStack;
+    }
+
+    ActivityStack getHomeStack(int displayId) {
+        return mHomeStack;
+    }
+
+    void removeAllStacks(int displayId) {
+    }
+
+    ArrayList<ActivityRecord> processFinishingActivitiesLocked(boolean remove, int displayId) {
+        int N = this.mFinishingActivities.size();
+        ArrayList<ActivityRecord> finishs = new ArrayList();
+        int i = 0;
+        while (i < N) {
+            ActivityRecord f = (ActivityRecord) this.mFinishingActivities.get(i);
+            if (displayId > -1) {
+                f.dualScreenAttrs.addFinishFlag(displayId);
+                if (!f.dualScreenAttrs.okToFinish()) {
+                    i++;
+                }
+            }
+            f.dualScreenAttrs.clearFinishFlag();
+            finishs.add(f);
+            if (remove) {
+                this.mFinishingActivities.remove(i);
+                N--;
+                i--;
+            }
+            i++;
+        }
+        return finishs;
+    }
+    public static int convertDisplayIdToScreenZone(int displayId) {
+        if (displayId == 0) {
+            return 1;
+        }
+        if (displayId == 1) {
+            return 2;
+        }
+        if (displayId == 2) {
+            return 3;
+        }
+        return 0;
+    }
+
+    public static int convertScreenZoneToDisplayId(int screenZone) {
+        if (screenZone == 1) {
+            return 0;
+        }
+        if (screenZone == 2) {
+            return 1;
+        }
+        if (screenZone == 3) {
+            return 2;
+        }
+        return -1;
+    }
+
+    void moveTaskToScreenLocked(TaskRecord task, int toDisplayId, boolean toTop, boolean doResumeTop, boolean doAnimation) {
+        moveTaskToScreenLocked(task, toDisplayId, toTop, doResumeTop, doAnimation, false, false);
+    }
+
+    void moveTaskToScreenLocked(TaskRecord task, int toDisplayId, boolean toTop, boolean doResumeTop, boolean doAnimation, boolean forceDoAnimation, boolean byArrangeFullViewPolicy) {
     }
 
     private final class SleepTokenImpl extends SleepToken {

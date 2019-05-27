@@ -1036,6 +1036,18 @@ public final class ActivityThread extends ClientTransactionHandler {
             sendMessage(H.SCHEDULE_CRASH, msg);
         }
 
+        public void dumpContextRelationInfo(ParcelFileDescriptor pfd, String prefix, String[] args) {
+            DumpComponentInfo data = new DumpComponentInfo();
+            try {
+                data.fd = pfd.dup();
+                data.prefix = prefix;
+                data.args = args;
+                ActivityThread.this.sendMessage(2001, data, 0, 0, true);
+            } catch (IOException e) {
+                Slog.w("ActivityThread", "dumpContextRelationInfo failed", e);
+            }
+        }
+
         public void dumpActivity(ParcelFileDescriptor pfd, IBinder activitytoken,
                 String prefix, String[] args) {
             DumpComponentInfo data = new DumpComponentInfo();
